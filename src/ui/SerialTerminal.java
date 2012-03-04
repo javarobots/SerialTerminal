@@ -1,21 +1,25 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * SerialTerminal.java
- *
- * Created on Jan 29, 2012, 10:35:48 AM
- */
-
 package ui;
+
+import gnu.io.SerialPort;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
+import java.io.IOException;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.TooManyListenersException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.DefaultComboBoxModel;
+import util.rxtx.RxTxUtilities;
+import util.rxtx.SerialDataListener;
 
 /**
  *
  * @author Parham
  */
-public class SerialTerminal extends javax.swing.JFrame {
+public class SerialTerminal extends javax.swing.JFrame implements Observer {
+
+    private boolean mComPortsPopulated = false;
 
     /**
     * @param args the command line arguments
@@ -31,6 +35,17 @@ public class SerialTerminal extends javax.swing.JFrame {
     /** Creates new form SerialTerminal */
     public SerialTerminal() {
         initComponents();
+
+        SerialTerminalModel model = new SerialTerminalModel();
+        model.addObserver(this);
+        model.notifyObservers();
+
+        mDataScrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+            @Override
+            public void adjustmentValueChanged(AdjustmentEvent ae) {
+                mDataTextArea.select(mDataTextArea.getHeight() + 100000, 0);
+            }
+        });
     }
 
     /** This method is called from within the constructor to
@@ -42,26 +57,113 @@ public class SerialTerminal extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        mComLabel = new javax.swing.JLabel();
+        mComComboBox = new javax.swing.JComboBox();
+        mOpenButton = new javax.swing.JButton();
+        mDataScrollPane = new javax.swing.JScrollPane();
+        mDataTextArea = new javax.swing.JTextArea();
+        mMenuBar = new javax.swing.JMenuBar();
+        mFileMenu = new javax.swing.JMenu();
+        mExitMenuItem = new javax.swing.JMenuItem();
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Serial Terminal");
+
+        mComLabel.setText("COM:");
+
+        mOpenButton.setText("Open");
+        mOpenButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mOpenButtonActionPerformed(evt);
+            }
+        });
+
+        mDataTextArea.setColumns(20);
+        mDataTextArea.setRows(5);
+        mDataScrollPane.setViewportView(mDataTextArea);
+
+        mFileMenu.setText("File");
+
+        mExitMenuItem.setText("Exit");
+        mExitMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mExitMenuItemActionPerformed(evt);
+            }
+        });
+        mFileMenu.add(mExitMenuItem);
+
+        mMenuBar.add(mFileMenu);
+
+        setJMenuBar(mMenuBar);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(mDataScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 628, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(mComLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(mComComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(mOpenButton)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(mComLabel)
+                    .addComponent(mComComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(mOpenButton))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(mDataScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 228, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void mOpenButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mOpenButtonActionPerformed
+        try {
+            SerialPort port = RxTxUtilities.openPortByName(mComComboBox.getSelectedItem().toString(), 9600);
+            port.notifyOnDataAvailable(true);
+            SerialDataListener listener = new SerialDataListener(port.getInputStream(),mDataTextArea);
+            port.addEventListener(listener);
+        } catch (TooManyListenersException | IOException ex) {
+            Logger.getLogger(SerialTerminal.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_mOpenButtonActionPerformed
+
+    private void mExitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mExitMenuItemActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_mExitMenuItemActionPerformed
+
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JComboBox mComComboBox;
+    private javax.swing.JLabel mComLabel;
+    private javax.swing.JScrollPane mDataScrollPane;
+    private javax.swing.JTextArea mDataTextArea;
+    private javax.swing.JMenuItem mExitMenuItem;
+    private javax.swing.JMenu mFileMenu;
+    private javax.swing.JMenuBar mMenuBar;
+    private javax.swing.JButton mOpenButton;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void update(Observable o, Object arg) {
+        SerialTerminalModel model = (SerialTerminalModel)o;
+        if (!mComPortsPopulated){
+            mComComboBox.setModel(new DefaultComboBoxModel(model.getAvailablePorts().toArray(new String[0])));
+            mComPortsPopulated = true;
+        }
+    }
 
 }
