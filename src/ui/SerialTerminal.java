@@ -20,12 +20,14 @@ import util.rxtx.SerialDataListener;
 public class SerialTerminal extends javax.swing.JFrame implements Observer {
 
     private boolean mComPortsPopulated = false;
+    private SerialPort mPort;
 
     /**
     * @param args the command line arguments
     */
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 new SerialTerminal().setVisible(true);
             }
@@ -62,6 +64,7 @@ public class SerialTerminal extends javax.swing.JFrame implements Observer {
         mOpenButton = new javax.swing.JButton();
         mDataScrollPane = new javax.swing.JScrollPane();
         mDataTextArea = new javax.swing.JTextArea();
+        jButton1 = new javax.swing.JButton();
         mMenuBar = new javax.swing.JMenuBar();
         mFileMenu = new javax.swing.JMenu();
         mExitMenuItem = new javax.swing.JMenuItem();
@@ -81,6 +84,13 @@ public class SerialTerminal extends javax.swing.JFrame implements Observer {
         mDataTextArea.setColumns(20);
         mDataTextArea.setRows(5);
         mDataScrollPane.setViewportView(mDataTextArea);
+
+        jButton1.setText("Close");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         mFileMenu.setText("File");
 
@@ -110,9 +120,14 @@ public class SerialTerminal extends javax.swing.JFrame implements Observer {
                         .addComponent(mComComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(mOpenButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton1)
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
+
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jButton1, mOpenButton});
+
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
@@ -120,7 +135,8 @@ public class SerialTerminal extends javax.swing.JFrame implements Observer {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(mComLabel)
                     .addComponent(mComComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(mOpenButton))
+                    .addComponent(mOpenButton)
+                    .addComponent(jButton1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(mDataScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 228, Short.MAX_VALUE)
                 .addContainerGap())
@@ -131,10 +147,10 @@ public class SerialTerminal extends javax.swing.JFrame implements Observer {
 
     private void mOpenButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mOpenButtonActionPerformed
         try {
-            SerialPort port = RxTxUtilities.openPortByName(mComComboBox.getSelectedItem().toString(), 9600);
-            port.notifyOnDataAvailable(true);
-            SerialDataListener listener = new SerialDataListener(port.getInputStream(),mDataTextArea);
-            port.addEventListener(listener);
+            mPort = RxTxUtilities.openPortByName(mComComboBox.getSelectedItem().toString(), 9600);
+            mPort.notifyOnDataAvailable(true);
+            SerialDataListener listener = new SerialDataListener(mPort.getInputStream(),mDataTextArea);
+            mPort.addEventListener(listener);
         } catch (TooManyListenersException | IOException ex) {
             Logger.getLogger(SerialTerminal.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -144,9 +160,17 @@ public class SerialTerminal extends javax.swing.JFrame implements Observer {
         System.exit(0);
     }//GEN-LAST:event_mExitMenuItemActionPerformed
 
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        if (mPort != null){
+            mPort.close();
+            mPort = null;
+        }
+    }//GEN-LAST:event_jButton1ActionPerformed
+
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton1;
     private javax.swing.JComboBox mComComboBox;
     private javax.swing.JLabel mComLabel;
     private javax.swing.JScrollPane mDataScrollPane;
